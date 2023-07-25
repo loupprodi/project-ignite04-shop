@@ -5,9 +5,11 @@ import {
 } from "@/src/styles/pages/product";
 
 import Image from "next/image";
-import { GetServerSideProps, GetStaticProps } from "next";
+import { GetStaticPaths, GetStaticProps } from "next";
 import { stripe } from "@/src/lib/stripe";
 import Stripe from "stripe";
+import axios from "axios";
+import { useState } from "react";
 
 interface ProductProps {
   product: {
@@ -16,10 +18,34 @@ interface ProductProps {
     imageUrl: string;
     price: string;
     description: string;
+    defaultPriceId: string;
   };
 }
 
 export default function Product({ product }: ProductProps) {
+  // const router = useRouter();
+  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] =
+    useState(false);
+
+  const handleBuyProduct = async () => {
+    try {
+      setIsCreatingCheckoutSession(true);
+      const response = await axios.post("/api/checkout", {
+        priceId: product.defaultPriceId,
+      });
+
+      const { checkoutUrl } = response.data;
+
+      // router.push("/checkout"); caso fosse uma aplicação interna e não externa
+
+      window.location.href = checkoutUrl;
+    } catch (err) {
+      //conectar com uma ferramenta de observabilidade (datadog / sentry)
+      setIsCreatingCheckoutSession(false);
+      alert("falha ao redirecionar ao checkout");
+    }
+  };
+
   return (
     <ProductContainer>
       <ImageContainer>
@@ -31,16 +57,22 @@ export default function Product({ product }: ProductProps) {
 
         <p>{product.description}</p>
 
-        <button>comprar agora</button>
+        <button onClick={handleBuyProduct}>comprar agora</button>
       </ProductDetails>
     </ProductContainer>
   );
 }
 
-export const getServerSideProps: GetServerSideProps<
-  any,
-  { id: string }
-> = async ({ params }) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [{ params: { id: "prod_OIdc1Xt9AzGVzP" } }],
+    fallback: "blocking",
+  };
+};
+
+export const getStaticProps: GetStaticProps<any, { id: string }> = async ({
+  params,
+}) => {
   const productId = params.id;
 
   const product = await stripe.products.retrieve(productId, {
@@ -60,6 +92,7 @@ export const getServerSideProps: GetServerSideProps<
           currency: "BRL",
         }).format(price.unit_amount / 100),
         description: product.description,
+        defaultPriceId: price.id,
       },
     },
     // revalidate: 60 * 60 * 1,
