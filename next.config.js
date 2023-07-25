@@ -3,6 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
 
   images: {
+    newNextLinkBehavior: true,
     domains: ["files.stripe.com"],
   },
 };
