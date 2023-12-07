@@ -1,18 +1,15 @@
 import Stripe from "stripe";
 
-let environment: string = process.env.STRIPE_SECRET_KEY ?? ''
 
-export const getEnvironmentVariable = (env:string) => {
-  if(process.env.STRIPE_SECRET_KEY) {
-    return environment
-  } else{
-    throw new Error(`${env} environment variable is not set`)
-  }
-}
+const stripeKey = process.env.STRIPE_SECRET_KEY == 'live' ? process.env.STRIPE_PUBLIC_KEY : process.env.STRIPE_TEST_KEY
 
-export const stripe = new Stripe(getEnvironmentVariable(environment), {
+if (typeof stripeKey !== 'string') throw new Error('Stripe key not found')
+
+export const stripe = new Stripe(stripeKey, {
   apiVersion: "2022-11-15",
   appInfo: {
-    name: "Ignite Shop",
-  },
-});
+    name: 'Ignite Shop',
+  }
+})
+
+

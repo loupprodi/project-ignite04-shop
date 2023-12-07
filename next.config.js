@@ -1,11 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  swcMinify: true,
 
   images: {
-    newNextLinkBehavior: true,
-    domains: ["files.stripe.com"],
+    domains: [
+      'files.stripe.com',
+    ],
   },
-};
 
-module.exports = nextConfig;
+  experimental: {
+    newNextLinkBehavior: true,
+    images: {
+      allowFutureImage: true,
+    },
+  },
+}
+
+module.exports = nextConfig
